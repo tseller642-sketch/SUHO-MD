@@ -5,7 +5,7 @@ cmd(
   {
     pattern: "menu",
     alias: ["help", "commands"],
-    desc: "Show all bot commands",
+    desc: "Swipeable command menu",
     category: "info",
     react: "⚡",
     filename: __filename
@@ -17,44 +17,55 @@ cmd(
 
     // Group commands by category
     for (const c of commands) {
+      if (!c.pattern) continue;
       const cat = c.category || "other";
       if (!grouped[cat]) grouped[cat] = [];
       grouped[cat].push(c.pattern);
     }
 
-    let menu = `
-╔══════════════════════════════╗
-║      ⚡ 𝑺𝑼𝑯𝑶 – 𝑴𝑫 𝑽2 ⚡
-║   Created By 𝐋𝐎𝐑𝐃 𝐒𝐔𝐍𝐆
-╚══════════════════════════════╝
+    const cards = Object.keys(grouped).map(cat => {
+      return {
+        header: {
+          title: `📂 ${cat.toUpperCase()}`
+        },
+        body: {
+          text: grouped[cat]
+            .map(cmd => `➤ ${prefix}${cmd}`)
+            .join("\n")
+        },
+        footer: {
+          text: "⚡ SUHO-MD V2 • LORD SUNG"
+        }
+      };
+    });
 
-👤 User: @${m.sender.split("@")[0]}
-📦 Total Commands: ${commands.length}
+    const message = {
+      viewOnceMessage: {
+        message: {
+          interactiveMessage: {
+            header: {
+              title: "⚡ SUHO-MD V2",
+              subtitle: "Swipe left ➡️ to view all commands",
+              hasMediaAttachment: false
+            },
+            body: {
+              text: "🔥 Swipe through categories\n👑 Created by LORD SUNG"
+            },
+            footer: {
+              text: "Power • Speed • Stability"
+            },
+            carouselMessage: {
+              cards
+            }
+          }
+        }
+      }
+    };
 
-`;
-
-    for (const cat in grouped) {
-      menu += `
-╔═══ 📂 ${cat.toUpperCase()} ═══╗
-${grouped[cat]
-  .map(cmd => `┃ ➤ ${prefix}${cmd}`)
-  .join("\n")}
-╚══════════════════════╝
-`;
-    }
-
-    menu += `
-🔥 SUHO-MD V2
-⚡ Power • Speed • Stability
-`;
-
-    await client.sendMessage(
+    await client.relayMessage(
       mek.key.remoteJid,
-      {
-        text: menu,
-        mentions: [m.sender]
-      },
-      { quoted: mek }
+      message,
+      { messageId: mek.key.id }
     );
   }
 );
